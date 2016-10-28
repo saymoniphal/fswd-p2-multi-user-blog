@@ -15,6 +15,7 @@ jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
                                autoescape = True)
 
 secret = 'fart'
+blogurl = '/writehere'
 
 def render_str(template, **params):
     t = jinja_env.get_template(template)
@@ -29,8 +30,8 @@ def check_secure_val(secure_val):
         return val
 
 class BlogHandler(webapp2.RequestHandler):
-    def write(self, *a, **kw):
-        self.response.out.write(*a, **kw)
+    def write(self, *args, **kw):
+        self.response.out.write(*args, **kw)
 
     def render_str(self, template, **params):
         params['user'] = self.user
@@ -55,8 +56,8 @@ class BlogHandler(webapp2.RequestHandler):
     def logout(self):
         self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
 
-    def initialize(self, *a, **kw):
-        webapp2.RequestHandler.initialize(self, *a, **kw)
+    def initialize(self, *args, **kw):
+        webapp2.RequestHandler.initialize(self, *args, **kw)
         uid = self.read_secure_cookie('user_id')
         self.user = uid and User.by_id(int(uid))
 
@@ -66,7 +67,7 @@ def render_post(response, post):
 
 class MainPage(BlogHandler):
   def get(self):
-      self.write('Hello, Udacity!')
+      self.redirect(blogurl)
 
 
 ##### user stuff
@@ -155,7 +156,7 @@ class NewPost(BlogHandler):
 
     def post(self):
         if not self.user:
-            self.redirect('/writehere')
+            self.redirect(blogurl)
 
         subject = self.request.get('subject')
         content = self.request.get('content')
@@ -163,7 +164,7 @@ class NewPost(BlogHandler):
         if subject and content:
             p = Post(parent = blog_key(), subject = subject, content = content)
             p.put()
-            self.redirect('/writehere/%s' % str(p.key().id()))
+            self.redirect('%s/%s' % (blogurl, str(p.key().id())))
         else:
             error = "subject and content, please!"
             self.render("newpost.html", subject=subject, content=content, error=error)
@@ -248,7 +249,7 @@ class Register(Signup):
             u.put()
 
             self.login(u)
-            self.redirect('/writehere')
+            self.redirect(blogurl)
 
 class Login(BlogHandler):
     def get(self):
@@ -261,7 +262,7 @@ class Login(BlogHandler):
         u = User.login(username, password)
         if u:
             self.login(u)
-            self.redirect('/writehere')
+            self.redirect(blogurl)
         else:
             msg = 'Invalid login'
             self.render('login-form.html', error = msg)
@@ -269,7 +270,7 @@ class Login(BlogHandler):
 class Logout(BlogHandler):
     def get(self):
         self.logout()
-        self.redirect('/writehere')
+        self.redirect(blogurl)
 
 class Unit3Welcome(BlogHandler):
     def get(self):
@@ -290,9 +291,9 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                ('/unit2/rot13', Rot13),
                                ('/unit2/signup', Unit2Signup),
                                ('/unit2/welcome', Welcome),
-                               ('/writehere/?', BlogFront),
-                               ('/writehere/([0-9]+)', PostPage),
-                               ('/writehere/newpost', NewPost),
+                               (blogurl + '/?', BlogFront),
+                               (blogurl + '/([0-9]+)', PostPage),
+                               (blogurl + '/newpost', NewPost),
                                ('/signup', Register),
                                ('/login', Login),
                                ('/logout', Logout),
