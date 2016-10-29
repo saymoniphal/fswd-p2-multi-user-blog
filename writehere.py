@@ -56,6 +56,9 @@ class BlogHandler(webapp2.RequestHandler):
     def logout(self):
         self.response.headers.add_header('Set-Cookie', 'user_id=; Path=/')
 
+    '''initialize the user attribute with uid if its exists
+       this is easier to use in our templates
+    '''
     def initialize(self, *args, **kw):
         webapp2.RequestHandler.initialize(self, *args, **kw)
         uid = self.read_secure_cookie('user_id')
@@ -92,6 +95,9 @@ class User(db.Model):
     pw_hash = db.StringProperty(required = True)
     email = db.StringProperty()
 
+    '''decorator method, @classmethod indicates that
+       it's the method of the class itself, object
+       creation is not required in order to use this method'''
     @classmethod
     def by_id(cls, uid):
         return User.get_by_id(uid, parent = users_key())
@@ -116,15 +122,15 @@ class User(db.Model):
             return u
 
 
-##### blog stuff
-
 def blog_key(name = 'default'):
     return db.Key.from_path('blogs', name)
 
 class Post(db.Model):
     subject = db.StringProperty(required = True)
     content = db.TextProperty(required = True)
+    # 'auto_now_add': set time of creation with current time (now)
     created = db.DateTimeProperty(auto_now_add = True)
+    # 'auto_now': set mtime with current time (now)
     last_modified = db.DateTimeProperty(auto_now = True)
 
     def render(self):
@@ -138,6 +144,7 @@ class BlogFront(BlogHandler):
 
 class PostPage(BlogHandler):
     def get(self, post_id):
+        # get Post from the database by its id (post_id)
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
 
@@ -162,11 +169,12 @@ class NewPost(BlogHandler):
         content = self.request.get('content')
 
         if subject and content:
+            # create Post object and added to the db
             p = Post(parent = blog_key(), subject = subject, content = content)
             p.put()
             self.redirect('%s/%s' % (blogurl, str(p.key().id())))
         else:
-            error = "subject and content, please!"
+            error = "Subject and content, please!"
             self.render("newpost.html", subject=subject, content=content, error=error)
 
 
