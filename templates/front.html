@@ -3,14 +3,18 @@
 {% block content %}
 
 <div class="row">
-<div class="col-md-9">
-  {% for p in posts %}
-    {{ p.render() | safe }}
-    <br><br>
-  {% endfor %}
+	<div class="col-md-12">
+  	{% for p in posts %}
+    		{{ p.render()}}
+    		<br><br>
+  	{% endfor %}
 </div>
-<div class="col-md-3">
-<h2><a href="/writehere/newpost">New post</h2>
-</div>
+
+<div class="row">
+	<div class="col-md-4">
+	{% if user %}
+		<h2><a href="/writehere/newpost">New post</h2>
+	{% endif %}
+	</div>
 </div>
 {% endblock %}
