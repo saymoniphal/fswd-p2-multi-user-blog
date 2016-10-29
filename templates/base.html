@@ -23,15 +23,17 @@
 	<div class="container">
 		<header>
 			<div class="row">
-				<div class="col-md-6 text-right login-area">
+				<div class="col-md-12 login-area text-right">
+					<a href="/writehere">Home</a>
+					|
 				{% if user %}
 					{{user.name}} (<a class="login-link" href="/logout">logout</a>)
 				{% else %}
 			      		<a class="login-link" href="/login">Login</a>
 			      		|
 			      		<a class="login-link" href="/signup">Signup</a>
-			    	{% endif %}
 				</div>
+			    	{% endif %}
 			</div>
 		</header>
 
@@ -50,9 +52,6 @@
 
 		<footer>
 			<div class="row">
-				<div class="col-md-6">
-					<a href="/writehere">|Home|</a>
-				</div>
 				<div class="col-md-6 text-right">
 					<p><a href="http://css-validator.org/check/referer">
 						<img src="http://css-validator.org/images/vcss.png"

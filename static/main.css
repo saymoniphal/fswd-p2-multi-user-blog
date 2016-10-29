@@ -14,7 +14,8 @@ body {
     position: absolute;
     top: 10px;
     right: 10px;
-    background-color: #CCECE6;
+    background-color: #AAC3BE;
+    padding: 10px;
 }
 
 .login-link {
