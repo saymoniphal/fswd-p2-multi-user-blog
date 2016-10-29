@@ -132,10 +132,16 @@ class Post(db.Model):
     created = db.DateTimeProperty(auto_now_add = True)
     # 'auto_now': set mtime with current time (now)
     last_modified = db.DateTimeProperty(auto_now = True)
+    # author of this post
+    author = db.ReferenceProperty(User, collection_name='posts')
 
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
         return render_str("post.html", p = self)
+
+class Like(db.Model):
+    post = db.ReferenceProperty(Post, collection_name='likers')
+    user = db.ReferenceProperty(User, collection_name='liked_posts')
 
 class BlogFront(BlogHandler):
     def get(self):
@@ -152,7 +158,21 @@ class PostPage(BlogHandler):
             self.error(404)
             return
 
-        self.render("permalink.html", post = post)
+        self.render("permalink.html", post = post, logged_in_user=self.user)
+
+    def post(self, post_id):
+        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+        post = db.get(key)
+        if self.request.get('post_action') == 'delete_post':
+            post.delete()    
+            self.redirect(blogurl)
+            return
+        elif self.request.get('post_action') == 'edit_post':
+            self.render("newpost.html", post_id=post_id, subject=post.subject, content=post.content)
+            return
+        else:
+            self.error(405)
+            return
 
 class NewPost(BlogHandler):
     def get(self):
@@ -170,7 +190,7 @@ class NewPost(BlogHandler):
 
         if subject and content:
             # create Post object and added to the db
-            p = Post(parent = blog_key(), subject = subject, content = content)
+            p = Post(parent = blog_key(), subject = subject, content = content, author=self.user)
             p.put()
             self.redirect('%s/%s' % (blogurl, str(p.key().id())))
         else:
