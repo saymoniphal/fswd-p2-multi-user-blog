@@ -181,7 +181,11 @@ class NewPost(BlogHandler):
         else:
             self.redirect("/login")
 
-    def post(self):
+    def post(self, post_id=None):
+        # TO DO
+        self.response.write(self.request.get('post_id'))
+        return
+
         if not self.user:
             self.redirect(blogurl)
 
@@ -189,14 +193,26 @@ class NewPost(BlogHandler):
         content = self.request.get('content')
 
         if subject and content:
-            # create Post object and added to the db
-            p = Post(parent = blog_key(), subject = subject, content = content, author=self.user)
-            p.put()
-            self.redirect('%s/%s' % (blogurl, str(p.key().id())))
+            if post_id:
+                # this is an existing post, fetch Post entity from db and update it
+                key = db.Key.from_path('Post', int(post_id), parent=blog_key())
+                post = db.get(key)
+                post.suject = subject
+                post.content = content
+                post.put()
+                # redirect to post page displaying an updated post
+                self.redirect('%s/%s' % (blogurl, str(post_id)))
+                return
+            else:
+                # create Post object and added to the db
+                p = Post(parent = blog_key(), subject = subject, content = content, author=self.user)
+                p.put()
+                # redirect to post page displaying a new post
+                self.redirect('%s/%s' % (blogurl, str(p.key().id())))
+                return
         else:
             error = "Subject and content, please!"
             self.render("newpost.html", subject=subject, content=content, error=error)
-
 
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 def valid_username(username):
