@@ -4,13 +4,17 @@
   {{post.render() | safe}}
   <div class="post-controls">
     {% if logged_in_user and post.author.name == logged_in_user.name %}
-    <form method="post" class="form-control">
-    <button class="form-control" name="post_action" value="delete_post">Delete</button>
-    <button class="form-control" name="post_action" value="edit_post">Edit</button>
+    <form method="post" class="form-horizontal">
+      <div class="form-group">
+        <button class="btn btn-danger" name="post_action" value="delete_post">Delete</button>
+        <button class="btn btn-primary" name="post_action" value="edit_post">Edit</button>
+      </div>
     </form>
     {% else %}
-    <form method="post" class="form-control">
-    <button class="form-control" name="post_action" value="like_post">Like</button>
+    <form method="post" class="form-horizontal">
+      <div class="form-group">
+        <button class="btn btn-primary" name="post_action" value="like_post">Like</button>
+      </div>
     </form>
     {% endif %}
   </div>
