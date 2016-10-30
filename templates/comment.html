@@ -10,7 +10,7 @@
   </div>
 
   <div class="comment-text">
-    {{c._render_text | safe}}
+    {{c._render_text | clean(tags=['img', 'b', 'i', 'em', 'strong', 'br'], attributes={'img': ['src', 'alt', 'title', 'width', 'height']})}}
   </div>
 </div>
 

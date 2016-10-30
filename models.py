@@ -7,6 +7,7 @@ from google.appengine.ext import db
 
 import utils
 
+# returns a random string of 5 characters
 def make_salt(length = 5):
     return ''.join(random.choice(letters) for x in xrange(length))
 
@@ -28,9 +29,9 @@ class User(db.Model):
     pw_hash = db.StringProperty(required = True)
     email = db.StringProperty()
 
-    '''decorator method, @classmethod indicates that
+    """decorator method, @classmethod indicates that
        it's the method of the class itself, object
-       creation is not required in order to use this method'''
+       creation is not required in order to use this method"""
     @classmethod
     def by_id(cls, uid):
         return User.get_by_id(uid, parent = users_key())

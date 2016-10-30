@@ -16,7 +16,7 @@
   </div>
 
   <div class="post-content">
-    {{p._render_text | safe}}
+    {{p._render_text | clean(tags=['img', 'b', 'i', 'em', 'strong', 'br'], attributes={'img': ['src', 'alt', 'title', 'width', 'height']})}}
   </div>
 
   <div class="post-footer">
