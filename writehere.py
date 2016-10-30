@@ -137,7 +137,7 @@ class Post(db.Model):
 
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
-        return render_str("post.html", p = self, nlikers = len(list(self.likers)))
+        return render_str("post.html", p = self, nlikers = len(list(self.likers)), ndislikers = len(list(self.dislikers)))
 
 class Like(db.Model):
     post = db.ReferenceProperty(Post, collection_name='likers')
@@ -148,8 +148,26 @@ class Like(db.Model):
         l = Like.all().filter('post =', post).filter('user =', user).get()
         if l:
             return
+        d = Dislike.all().filter('post =', post).filter('user =', user).get()
+        if d:
+            d.delete()
         l = Like(post=post, user=user)
         l.put() 
+
+class Dislike(db.Model):
+    post = db.ReferenceProperty(Post, collection_name='dislikers')
+    user = db.ReferenceProperty(User, collection_name='disliked_posts')
+
+    @staticmethod
+    def add_dislike(post, user):
+        d = Dislike.all().filter('post =', post).filter('user =', user).get()
+        if d:
+            return
+        l = Like.all().filter('post =', post).filter('user =', user).get()
+        if l:
+            l.delete()
+        d = Dislike(post=post, user=user)
+        d.put() 
 
 class BlogFront(BlogHandler):
     def get(self):
@@ -172,6 +190,9 @@ class PostPage(BlogHandler):
         key = db.Key.from_path('Post', int(post_id), parent=blog_key())
         post = db.get(key)
         if self.request.get('post_action') == 'delete_post':
+            if post.author.name != self.user.name:
+                self.error(403)
+                return
             post.delete()    
             self.redirect(blogurl)
             return
@@ -179,7 +200,17 @@ class PostPage(BlogHandler):
             self.render("newpost.html", post_id=post_id, subject=post.subject, content=post.content)
             return
         elif self.request.get('post_action') == 'like_post':
+            if post.author.name == self.user.name:
+                self.error(403)
+                return
             Like.add_like(post, self.user)
+            self.redirect('%s/%s' % (blogurl, str(post.key().id())))
+            return
+        elif self.request.get('post_action') == 'dislike_post':
+            if post.author.name == self.user.name:
+                self.error(403)
+                return
+            Dislike.add_dislike(post, self.user)
             self.redirect('%s/%s' % (blogurl, str(post.key().id())))
             return
         # we are coming here with updated content
