@@ -137,11 +137,19 @@ class Post(db.Model):
 
     def render(self):
         self._render_text = self.content.replace('\n', '<br>')
-        return render_str("post.html", p = self)
+        return render_str("post.html", p = self, nlikers = len(list(self.likers)))
 
 class Like(db.Model):
     post = db.ReferenceProperty(Post, collection_name='likers')
     user = db.ReferenceProperty(User, collection_name='liked_posts')
+
+    @staticmethod
+    def add_like(post, user):
+        l = Like.all().filter('post =', post).filter('user =', user).get()
+        if l:
+            return
+        l = Like(post=post, user=user)
+        l.put() 
 
 class BlogFront(BlogHandler):
     def get(self):
@@ -170,9 +178,26 @@ class PostPage(BlogHandler):
         elif self.request.get('post_action') == 'edit_post':
             self.render("newpost.html", post_id=post_id, subject=post.subject, content=post.content)
             return
-        else:
-            self.error(405)
+        elif self.request.get('post_action') == 'like_post':
+            Like.add_like(post, self.user)
+            self.redirect('%s/%s' % (blogurl, str(post.key().id())))
             return
+        # we are coming here with updated content
+        subject = self.request.get('subject')
+        content = self.request.get('content')
+        if post.author.name != self.user.name:
+            self.error(403)
+            return
+        if not subject or not content:
+            error = "Subject and content, please!"
+            self.render("newpost.html", post_id=post_id, subject=subject, content=content, error=error)
+            return
+        post.subject = subject
+        post.content = content
+        post.put()
+        # redirect to post page displaying an updated post
+        self.redirect('%s/%s' % (blogurl, str(post_id)))
+        return
 
 class NewPost(BlogHandler):
     def get(self):
@@ -181,11 +206,7 @@ class NewPost(BlogHandler):
         else:
             self.redirect("/login")
 
-    def post(self, post_id=None):
-        # TO DO
-        self.response.write(self.request.get('post_id'))
-        return
-
+    def post(self):
         if not self.user:
             self.redirect(blogurl)
 
@@ -193,23 +214,12 @@ class NewPost(BlogHandler):
         content = self.request.get('content')
 
         if subject and content:
-            if post_id:
-                # this is an existing post, fetch Post entity from db and update it
-                key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-                post = db.get(key)
-                post.suject = subject
-                post.content = content
-                post.put()
-                # redirect to post page displaying an updated post
-                self.redirect('%s/%s' % (blogurl, str(post_id)))
-                return
-            else:
-                # create Post object and added to the db
-                p = Post(parent = blog_key(), subject = subject, content = content, author=self.user)
-                p.put()
-                # redirect to post page displaying a new post
-                self.redirect('%s/%s' % (blogurl, str(p.key().id())))
-                return
+            # create Post object and added to the db
+            p = Post(parent = blog_key(), subject = subject, content = content, author=self.user)
+            p.put()
+            # redirect to post page displaying a new post
+            self.redirect('%s/%s' % (blogurl, str(p.key().id())))
+            return
         else:
             error = "Subject and content, please!"
             self.render("newpost.html", subject=subject, content=content, error=error)

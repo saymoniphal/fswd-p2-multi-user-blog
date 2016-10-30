@@ -9,7 +9,9 @@
     <button class="form-control" name="post_action" value="edit_post">Edit</button>
     </form>
     {% else %}
-    Like
+    <form method="post" class="form-control">
+    <button class="form-control" name="post_action" value="like_post">Like</button>
+    </form>
     {% endif %}
   </div>
 {% endblock %}
