@@ -18,5 +18,3 @@ jinja_env.filters['clean'] = do_clean
 def render_str(template, **params):
     t = jinja_env.get_template(template)
     return t.render(params)
-
-def generate_secret()

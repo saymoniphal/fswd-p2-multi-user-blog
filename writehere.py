@@ -12,7 +12,7 @@ from google.appengine.ext import db
 import models
 import utils
 
-secret = 'fart'
+secret = 'ksdfjakfdsa12345#$%213569'
 blogurl = '/writehere'
 
 def make_secure_val(val):

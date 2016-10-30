@@ -7,8 +7,8 @@ from google.appengine.ext import db
 
 import utils
 
-# returns a random string of 5 characters
-def make_salt(length = 5):
+# returns a random string of 16 characters (128 bits on base64)
+def make_salt(length = 16):
     return ''.join(random.choice(letters) for x in xrange(length))
 
 def make_pw_hash(name, pw, salt = None):
