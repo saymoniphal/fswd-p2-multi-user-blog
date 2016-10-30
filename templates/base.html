@@ -27,7 +27,10 @@
 					<a href="/writehere">Home</a>
 					|
 				{% if user %}
-					{{user.name}} (<a class="login-link" href="/logout">logout</a>)
+					<a href="/writehere/user/{{user.name}}">
+					  {{user.name}}
+					</a>
+					(<a class="login-link" href="/logout">logout</a>)
 				{% else %}
 			      		<a class="login-link" href="/login">Login</a>
 			      		|

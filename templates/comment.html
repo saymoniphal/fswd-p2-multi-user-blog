@@ -1,10 +1,16 @@
 <div class="comment">
-    <div class="comment-date">
-      {{c.created.strftime("%b %d, %Y")}} by {{c.author.name}}
-    </div>
+  <div class="comment-date">
+    <span title="{{c.created.strftime('%Y-%m-%d %H:%M:%S')}}">
+      {{c.created.strftime("%b %d, %Y")}}
+    </span>
+    by
+    <a href="/writehere/user/{{c.author.name}}">
+      {{c.author.name}}
+    </a>
+  </div>
 
-    <div class="comment-text">
-      {{c._render_text | safe}}
-    </div>
+  <div class="comment-text">
+    {{c._render_text | safe}}
+  </div>
 </div>
 

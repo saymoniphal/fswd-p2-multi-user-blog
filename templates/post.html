@@ -1,11 +1,17 @@
 <div class="post">
   <div class="post-heading">
     <div class="post-title">
-      <a href="/writehere/{{p.key().id()}}">{{p.subject}}</a>
+      <a href="/writehere/post/{{p.key().id()}}">{{p.subject}}</a>
     </div>
 
     <div class="post-date">
-      {{p.created.strftime("%b %d, %Y")}} by {{p.author.name}}
+      <span title="{{p.created.strftime('%Y-%m-%d %H:%M:%S')}}">
+	{{p.created.strftime("%b %d, %Y")}}
+      </span>
+      by
+      <a href="/writehere/user/{{p.author.name}}">
+	{{p.author.name}}
+      </a>
     </div>
   </div>
 

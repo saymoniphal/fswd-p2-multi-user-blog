@@ -98,18 +98,18 @@ class PostPage(BlogHandler):
                 self.error(403)
                 return
             post.add_like(self.user)
-            self.redirect('%s/%s' % (blogurl, str(post.key().id())))
+            self.redirect('%s/post/%s' % (blogurl, str(post.key().id())))
             return
         elif self.request.get('post_action') == 'dislike_post':
             if post.author.name == self.user.name:
                 self.error(403)
                 return
             post.add_dislike(self.user)
-            self.redirect('%s/%s' % (blogurl, str(post.key().id())))
+            self.redirect('%s/post/%s' % (blogurl, str(post.key().id())))
             return
         elif self.request.get('post_action') == 'comment_post':
             post.add_comment(self.user, self.request.get('comment_text'))
-            self.redirect('%s/%s' % (blogurl, str(post.key().id())))
+            self.redirect('%s/post/%s' % (blogurl, str(post.key().id())))
             return
         # we are coming here with updated content
         subject = self.request.get('subject')
@@ -125,7 +125,7 @@ class PostPage(BlogHandler):
         post.content = content
         post.put()
         # redirect to post page displaying an updated post
-        self.redirect('%s/%s' % (blogurl, str(post_id)))
+        self.redirect('%s/post/%s' % (blogurl, str(post_id)))
         return
 
 class NewPost(BlogHandler):
@@ -144,11 +144,16 @@ class NewPost(BlogHandler):
 
         if subject and content:
             p = models.Post.new_post(subject, content, self.user)
-            self.redirect('%s/%s' % (blogurl, str(p.key().id())))
+            self.redirect('%s/post/%s' % (blogurl, str(p.key().id())))
             return
         else:
             error = "Subject and content, please!"
             self.render("newpost.html", subject=subject, content=content, error=error)
+
+class UserPage(BlogHandler):
+    def get(self, username):
+        u = models.User.by_name(username)
+        self.render("userpage.html", infouser=u)
 
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
 def valid_username(username):
@@ -244,8 +249,9 @@ class Welcome(BlogHandler):
 
 app = webapp2.WSGIApplication([('/', MainPage),
                                (blogurl + '/?', BlogFront),
-                               (blogurl + '/([0-9]+)', PostPage),
+                               (blogurl + '/post/([0-9]+)', PostPage),
                                (blogurl + '/newpost', NewPost),
+                               (blogurl + '/user/(.*)', UserPage),
                                ('/signup', Register),
                                ('/login', Login),
                                ('/logout', Logout),

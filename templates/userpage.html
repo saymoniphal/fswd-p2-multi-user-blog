@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Posts by {{ infouser.name }}</h2>
+
+<ul>
+{% for p in infouser.posts %}
+   <li><a href="/writehere/post/{{ p.key().id() }}">{{ p.subject }}</a></li>
+{% endfor %}
+</ul>
+
+<h2>Posts liked by {{ infouser.name }}</h2>
+
+<ul>
+{% for like in infouser.liked_posts %}
+   <li><a href="/writehere/post/{{ like.post.key().id() }}">{{ like.post.subject }}</a></li>
+{% endfor %}
+</ul>
+
+<h2>Posts commented on by {{ infouser.name }}</h2>
+
+<ul>
+{% for comment in infouser.comments %}
+   <li><a href="/writehere/post/{{ comment.post.key().id() }}">{{ comment.post.subject }}</a></li>
+{% endfor %}
+</ul>
+
+{% endblock %}
