@@ -1,0 +1,10 @@
+<div class="comment">
+    <div class="comment-date">
+      {{c.created.strftime("%b %d, %Y")}} by {{c.author.name}}
+    </div>
+
+    <div class="comment-text">
+      {{c._render_text | safe}}
+    </div>
+</div>
+

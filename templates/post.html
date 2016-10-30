@@ -5,14 +5,16 @@
     </div>
 
     <div class="post-date">
-      {{p.created.strftime("%b %d, %Y")}} by {{p.author.name}}, {{ nlikers }} likes, {{ ndislikers }} dislikes
+      {{p.created.strftime("%b %d, %Y")}} by {{p.author.name}}
     </div>
-
   </div>
 
   <div class="post-content">
     {{p._render_text | safe}}
   </div>
 
+  <div class="post-footer">
+    {{ nlikers }} likes, {{ ndislikers }} dislikes, {{ ncomments }} comments
+  </div>
 </div>
 

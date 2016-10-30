@@ -40,6 +40,10 @@
     border-bottom: 3px solid #666;
 }
 
+.post-footer {
+    color: #999;
+}
+
 .post-title {
     font-size: 24px;
     font-weight: bold;

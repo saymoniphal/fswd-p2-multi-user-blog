@@ -6,20 +6,14 @@ import hmac
 from string import letters
 
 import webapp2
-import jinja2
 
 from google.appengine.ext import db
 
-template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
-                               autoescape = True)
+import models
+import utils
 
 secret = 'fart'
 blogurl = '/writehere'
-
-def render_str(template, **params):
-    t = jinja_env.get_template(template)
-    return t.render(params)
 
 def make_secure_val(val):
     return '%s|%s' % (val, hmac.new(secret, val).hexdigest())
@@ -35,7 +29,7 @@ class BlogHandler(webapp2.RequestHandler):
 
     def render_str(self, template, **params):
         params['user'] = self.user
-        return render_str(template, **params)
+        return utils.render_str(template, **params)
 
     def render(self, template, **kw):
         self.write(self.render_str(template, **kw))
@@ -62,7 +56,7 @@ class BlogHandler(webapp2.RequestHandler):
     def initialize(self, *args, **kw):
         webapp2.RequestHandler.initialize(self, *args, **kw)
         uid = self.read_secure_cookie('user_id')
-        self.user = uid and User.by_id(int(uid))
+        self.user = uid and models.User.by_id(int(uid))
 
 def render_post(response, post):
     response.out.write('<b>' + post.subject + '</b><br>')
@@ -72,123 +66,23 @@ class MainPage(BlogHandler):
   def get(self):
       self.redirect(blogurl)
 
-
-##### user stuff
-def make_salt(length = 5):
-    return ''.join(random.choice(letters) for x in xrange(length))
-
-def make_pw_hash(name, pw, salt = None):
-    if not salt:
-        salt = make_salt()
-    h = hashlib.sha256(name + pw + salt).hexdigest()
-    return '%s,%s' % (salt, h)
-
-def valid_pw(name, password, h):
-    salt = h.split(',')[0]
-    return h == make_pw_hash(name, password, salt)
-
-def users_key(group = 'default'):
-    return db.Key.from_path('users', group)
-
-class User(db.Model):
-    name = db.StringProperty(required = True)
-    pw_hash = db.StringProperty(required = True)
-    email = db.StringProperty()
-
-    '''decorator method, @classmethod indicates that
-       it's the method of the class itself, object
-       creation is not required in order to use this method'''
-    @classmethod
-    def by_id(cls, uid):
-        return User.get_by_id(uid, parent = users_key())
-
-    @classmethod
-    def by_name(cls, name):
-        u = User.all().filter('name =', name).get()
-        return u
-
-    @classmethod
-    def register(cls, name, pw, email = None):
-        pw_hash = make_pw_hash(name, pw)
-        return User(parent = users_key(),
-                    name = name,
-                    pw_hash = pw_hash,
-                    email = email)
-
-    @classmethod
-    def login(cls, name, pw):
-        u = cls.by_name(name)
-        if u and valid_pw(name, pw, u.pw_hash):
-            return u
-
-
-def blog_key(name = 'default'):
-    return db.Key.from_path('blogs', name)
-
-class Post(db.Model):
-    subject = db.StringProperty(required = True)
-    content = db.TextProperty(required = True)
-    # 'auto_now_add': set time of creation with current time (now)
-    created = db.DateTimeProperty(auto_now_add = True)
-    # 'auto_now': set mtime with current time (now)
-    last_modified = db.DateTimeProperty(auto_now = True)
-    # author of this post
-    author = db.ReferenceProperty(User, collection_name='posts')
-
-    def render(self):
-        self._render_text = self.content.replace('\n', '<br>')
-        return render_str("post.html", p = self, nlikers = len(list(self.likers)), ndislikers = len(list(self.dislikers)))
-
-class Like(db.Model):
-    post = db.ReferenceProperty(Post, collection_name='likers')
-    user = db.ReferenceProperty(User, collection_name='liked_posts')
-
-    @staticmethod
-    def add_like(post, user):
-        l = Like.all().filter('post =', post).filter('user =', user).get()
-        if l:
-            return
-        d = Dislike.all().filter('post =', post).filter('user =', user).get()
-        if d:
-            d.delete()
-        l = Like(post=post, user=user)
-        l.put() 
-
-class Dislike(db.Model):
-    post = db.ReferenceProperty(Post, collection_name='dislikers')
-    user = db.ReferenceProperty(User, collection_name='disliked_posts')
-
-    @staticmethod
-    def add_dislike(post, user):
-        d = Dislike.all().filter('post =', post).filter('user =', user).get()
-        if d:
-            return
-        l = Like.all().filter('post =', post).filter('user =', user).get()
-        if l:
-            l.delete()
-        d = Dislike(post=post, user=user)
-        d.put() 
-
 class BlogFront(BlogHandler):
     def get(self):
-        posts = greetings = Post.all().order('-created')
+        posts = greetings = models.Post.all().order('-created')
         self.render('front.html', posts = posts)
 
 class PostPage(BlogHandler):
     def get(self, post_id):
-        # get Post from the database by its id (post_id)
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post = db.get(key)
+        post = models.Post.get_post(post_id)
 
         if not post:
             self.error(404)
             return
 
-        self.render("permalink.html", post = post, logged_in_user=self.user)
+        self.render("permalink.html", post=post, logged_in_user=self.user)
 
     def post(self, post_id):
-        key = db.Key.from_path('Post', int(post_id), parent=blog_key())
-        post = db.get(key)
+        post = models.Post.get_post(post_id)
         if self.request.get('post_action') == 'delete_post':
             if post.author.name != self.user.name:
                 self.error(403)
@@ -203,14 +97,18 @@ class PostPage(BlogHandler):
             if post.author.name == self.user.name:
                 self.error(403)
                 return
-            Like.add_like(post, self.user)
+            post.add_like(self.user)
             self.redirect('%s/%s' % (blogurl, str(post.key().id())))
             return
         elif self.request.get('post_action') == 'dislike_post':
             if post.author.name == self.user.name:
                 self.error(403)
                 return
-            Dislike.add_dislike(post, self.user)
+            post.add_dislike(self.user)
+            self.redirect('%s/%s' % (blogurl, str(post.key().id())))
+            return
+        elif self.request.get('post_action') == 'comment_post':
+            post.add_comment(self.user, self.request.get('comment_text'))
             self.redirect('%s/%s' % (blogurl, str(post.key().id())))
             return
         # we are coming here with updated content
@@ -245,10 +143,7 @@ class NewPost(BlogHandler):
         content = self.request.get('content')
 
         if subject and content:
-            # create Post object and added to the db
-            p = Post(parent = blog_key(), subject = subject, content = content, author=self.user)
-            p.put()
-            # redirect to post page displaying a new post
+            p = models.Post.new_post(subject, content, self.user)
             self.redirect('%s/%s' % (blogurl, str(p.key().id())))
             return
         else:
@@ -307,12 +202,12 @@ class Signup(BlogHandler):
 class Register(Signup):
     def done(self):
         #make sure the user doesn't already exist
-        u = User.by_name(self.username)
+        u = models.User.by_name(self.username)
         if u:
             msg = 'That user already exists.'
             self.render('signup-form.html', error_username = msg)
         else:
-            u = User.register(self.username, self.password, self.email)
+            u = models.User.register(self.username, self.password, self.email)
             u.put()
 
             self.login(u)
@@ -326,7 +221,7 @@ class Login(BlogHandler):
         username = self.request.get('username')
         password = self.request.get('password')
 
-        u = User.login(username, password)
+        u = models.User.login(username, password)
         if u:
             self.login(u)
             self.redirect(blogurl)
