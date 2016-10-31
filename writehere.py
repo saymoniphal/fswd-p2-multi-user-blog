@@ -1,13 +1,7 @@
-import os
 import re
-import random
-import hashlib
 import hmac
-from string import letters
 
 import webapp2
-
-from google.appengine.ext import db
 
 import models
 import utils
@@ -15,13 +9,16 @@ import utils
 secret = 'ksdfjakfdsa12345#$%213569'
 blogurl = '/writehere'
 
+
 def make_secure_val(val):
     return '%s|%s' % (val, hmac.new(secret, val).hexdigest())
+
 
 def check_secure_val(secure_val):
     val = secure_val.split('|')[0]
     if secure_val == make_secure_val(val):
         return val
+
 
 class BlogHandler(webapp2.RequestHandler):
     def write(self, *args, **kw):
@@ -58,18 +55,22 @@ class BlogHandler(webapp2.RequestHandler):
         uid = self.read_secure_cookie('user_id')
         self.user = uid and models.User.by_id(int(uid))
 
+
 def render_post(response, post):
     response.out.write('<b>' + post.subject + '</b><br>')
     response.out.write(post.content)
 
+
 class MainPage(BlogHandler):
-  def get(self):
-      self.redirect(blogurl)
+    def get(self):
+        self.redirect(blogurl)
+
 
 class BlogFront(BlogHandler):
     def get(self):
-        posts = greetings = models.Post.all().order('-created')
-        self.render('front.html', posts = posts)
+        posts = models.Post.all().order('-created')
+        self.render('front.html', posts=posts)
+
 
 class PostPage(BlogHandler):
     def get(self, post_id):
@@ -87,11 +88,12 @@ class PostPage(BlogHandler):
             if post.author.name != self.user.name:
                 self.error(403)
                 return
-            post.delete()    
+            post.delete()
             self.redirect(blogurl)
             return
         elif self.request.get('post_action') == 'edit_post':
-            self.render("newpost.html", post_id=post_id, subject=post.subject, content=post.content)
+            self.render("newpost.html", post_id=post_id, subject=post.subject,
+                        content=post.content)
             return
         elif self.request.get('post_action') == 'like_post':
             if post.author.name == self.user.name:
@@ -120,7 +122,8 @@ class PostPage(BlogHandler):
                 return
             if not subject or not content:
                 error = "Subject and content, please!"
-                self.render("newpost.html", post_id=post_id, subject=subject, content=content, error=error)
+                self.render("newpost.html", post_id=post_id, subject=subject,
+                            content=content, error=error)
                 return
             post.subject = subject
             post.content = content
@@ -135,6 +138,7 @@ class PostPage(BlogHandler):
         else:
             self.error(405)
             return
+
 
 class NewPost(BlogHandler):
     def get(self):
@@ -157,7 +161,8 @@ class NewPost(BlogHandler):
                 return
             else:
                 error = "Subject and content, please!"
-                self.render("newpost.html", subject=subject, content=content, error=error)
+                self.render("newpost.html", subject=subject, content=content,
+                            error=error)
         elif self.request.get('post_action') == 'cancel_post':
             self.redirect(blogurl)
             return
@@ -165,22 +170,33 @@ class NewPost(BlogHandler):
             self.error(405)
             return
 
+
 class UserPage(BlogHandler):
     def get(self, username):
         u = models.User.by_name(username)
         self.render("userpage.html", infouser=u)
 
+
 USER_RE = re.compile(r"^[a-zA-Z0-9_-]{3,20}$")
+
+
 def valid_username(username):
     return username and USER_RE.match(username)
 
+
 PASS_RE = re.compile(r"^.{3,20}$")
+
+
 def valid_password(password):
     return password and PASS_RE.match(password)
 
-EMAIL_RE  = re.compile(r'^[\S]+@[\S]+\.[\S]+$')
+
+EMAIL_RE = re.compile(r'^[\S]+@[\S]+\.[\S]+$')
+
+
 def valid_email(email):
     return not email or EMAIL_RE.match(email)
+
 
 class Signup(BlogHandler):
     def get(self):
@@ -193,8 +209,7 @@ class Signup(BlogHandler):
         self.verify = self.request.get('verify')
         self.email = self.request.get('email')
 
-        params = dict(username = self.username,
-                      email = self.email)
+        params = dict(username=self.username, email=self.email)
 
         if not valid_username(self.username):
             params['error_username'] = "That's not a valid username."
@@ -219,19 +234,21 @@ class Signup(BlogHandler):
     def done(self, *a, **kw):
         raise NotImplementedError
 
+
 class Register(Signup):
     def done(self):
-        #make sure the user doesn't already exist
+        # make sure the user doesn't already exist
         u = models.User.by_name(self.username)
         if u:
             msg = 'That user already exists.'
-            self.render('signup-form.html', error_username = msg)
+            self.render('signup-form.html', error_username=msg)
         else:
             u = models.User.register(self.username, self.password, self.email)
             u.put()
 
             self.login(u)
             self.redirect(blogurl)
+
 
 class Login(BlogHandler):
     def get(self):
@@ -247,18 +264,20 @@ class Login(BlogHandler):
             self.redirect(blogurl)
         else:
             msg = 'Invalid login'
-            self.render('login-form.html', error = msg)
+            self.render('login-form.html', error=msg)
+
 
 class Logout(BlogHandler):
     def get(self):
         self.logout()
         self.redirect(blogurl)
 
+
 class Welcome(BlogHandler):
     def get(self):
         username = self.request.get('username')
         if valid_username(username):
-            self.render('welcome.html', username = username)
+            self.render('welcome.html', username=username)
         else:
             self.redirect('/signup')
 
