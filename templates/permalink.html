@@ -15,9 +15,13 @@
       </div>
     </form>
     {% elif logged_in_user %}
-    <form method="post" class="form-horizontal">
+    <form method="post" action="/writehere/post/{{post.key().id()}}/like" class="form-horizontal">
       <div class="form-group">
         <button class="btn btn-primary" name="post_action" value="like_post">Like</button>
+      </div>
+    </form>
+    <form method="post" action="/writehere/post/{{post.key().id()}}/dislike" class="form-horizontal">
+      <div class="form-group">
         <button class="btn btn-primary" name="post_action" value="dislike_post">Dislike</button>
       </div>
     </form>
@@ -34,7 +38,7 @@
   </div>
 
   {% if logged_in_user %}
-  <form method="post">
+  <form method="post" action="/writehere/post/{{post.key().id()}}/comment">
     <div class="form-group">
       <label for="comment-text" class="col-md-2 control-label">
 	Comment Text

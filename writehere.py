@@ -78,6 +78,9 @@ class DeletePostPage(BlogHandler):
             return self.redirect('/login')
 
         post = models.Post.get_post(post_id)
+        if post.author.name != self.user.name:
+            return self.error(403)
+
         post.delete()
         self.redirect(blogurl)
 
@@ -96,10 +99,11 @@ class EditPostPage(BlogHandler):
                 self.render("newpost.html", post_id=post_id, subject=subject,
                             content=content, error=error)
                 return
+
             post = models.Post.get_post(post_id)
             if post.author.name != self.user.name:
-                self.error(403)
-                return
+                return self.error(403)
+
             post.subject = subject
             post.content = content
             post.put()
@@ -115,6 +119,41 @@ class EditPostPage(BlogHandler):
             return
 
 
+class LikePostPage(BlogHandler):
+    def post(self, post_id):
+        if not self.user:
+            return self.redirect('/login')
+
+        post = models.Post.get_post(post_id)
+        if post.author.name == self.user.name:
+            return self.error(403)
+
+        post.add_like(self.user)
+        return self.redirect('%s/post/%s' % (blogurl, str(post.key().id())))
+
+
+class DislikePostPage(BlogHandler):
+    def post(self, post_id):
+        if not self.user:
+            return self.redirect('/login')
+
+        post = models.Post.get_post(post_id)
+        if post.author.name == self.user.name:
+            return self.error(403)
+
+        post.add_dislike(self.user)
+        return self.redirect('%s/post/%s' % (blogurl, str(post.key().id())))
+            
+
+class CommentPostPage(BlogHandler):
+    def post(self, post_id):
+        if not self.user:
+            return self.redirect('/login')
+
+        post = models.Post.get_post(post_id)
+        post.add_comment(self.user, self.request.get('comment_text'))
+        return self.redirect('%s/post/%s' % (blogurl, str(post.key().id())))
+        
 class PostPage(BlogHandler):
     def get(self, post_id):
         post = models.Post.get_post(post_id)
@@ -124,30 +163,6 @@ class PostPage(BlogHandler):
             return
 
         self.render("permalink.html", post=post, logged_in_user=self.user)
-
-    def post(self, post_id):
-        post = models.Post.get_post(post_id)
-        if self.request.get('post_action') == 'like_post':
-            if post.author.name == self.user.name:
-                self.error(403)
-                return
-            post.add_like(self.user)
-            self.redirect('%s/post/%s' % (blogurl, str(post.key().id())))
-            return
-        elif self.request.get('post_action') == 'dislike_post':
-            if post.author.name == self.user.name:
-                self.error(403)
-                return
-            post.add_dislike(self.user)
-            self.redirect('%s/post/%s' % (blogurl, str(post.key().id())))
-            return
-        elif self.request.get('post_action') == 'comment_post':
-            post.add_comment(self.user, self.request.get('comment_text'))
-            self.redirect('%s/post/%s' % (blogurl, str(post.key().id())))
-            return
-        else:
-            self.error(405)
-            return
 
 
 class NewPost(BlogHandler):
@@ -296,6 +311,9 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                (blogurl + '/post/([0-9]+)', PostPage),
                                (blogurl + '/post/([0-9]+)/delete', DeletePostPage),
                                (blogurl + '/post/([0-9]+)/edit', EditPostPage),
+                               (blogurl + '/post/([0-9]+)/like', LikePostPage),
+                               (blogurl + '/post/([0-9]+)/dislike', DislikePostPage),
+                               (blogurl + '/post/([0-9]+)/comment', CommentPostPage),
                                (blogurl + '/newpost', NewPost),
                                (blogurl + '/user/(.*)', UserPage),
                                ('/signup', Register),
