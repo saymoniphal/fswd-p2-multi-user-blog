@@ -2,25 +2,25 @@
 
 {% block content %}
   {{post.render() | safe}}
-  <div class="post-controls">
+  <div class="post-controls row">
     {% if logged_in_user and post.author.name == logged_in_user.name %}
-    <form method="post" action="/writehere/post/{{post.key().id()}}/delete" class="form-horizontal">
+    <form method="post" action="/writehere/post/{{post.key().id()}}/delete" class="col-md-6">
       <div class="form-group">
         <button class="btn btn-danger" name="post_action" value="delete_post">Delete</button>
       </div>
     </form>
-    <form method="post" action="/writehere/post/{{post.key().id()}}/edit" class="form-horizontal">
+    <form method="post" action="/writehere/post/{{post.key().id()}}/edit" class="col-md-6">
       <div class="form-group">
         <button class="btn btn-primary" name="post_action" value="edit_post">Edit</button>
       </div>
     </form>
     {% elif logged_in_user %}
-    <form method="post" action="/writehere/post/{{post.key().id()}}/like" class="form-horizontal">
+    <form method="post" action="/writehere/post/{{post.key().id()}}/like" class="col-md-6">
       <div class="form-group">
         <button class="btn btn-primary" name="post_action" value="like_post">Like</button>
       </div>
     </form>
-    <form method="post" action="/writehere/post/{{post.key().id()}}/dislike" class="form-horizontal">
+    <form method="post" action="/writehere/post/{{post.key().id()}}/dislike" class="col-md-6">
       <div class="form-group">
         <button class="btn btn-primary" name="post_action" value="dislike_post">Dislike</button>
       </div>
@@ -46,6 +46,10 @@
 
       <textarea class="form-control col-md-10"
 		rows="10" name="comment_text">{{comment}}</textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="col-md-12 error text-center">{{comment_error}}</label>
     </div>
 
     <div class="form-group text-center">

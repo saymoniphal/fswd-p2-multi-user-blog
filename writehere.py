@@ -151,7 +151,12 @@ class CommentPostPage(BlogHandler):
             return self.redirect('/login')
 
         post = models.Post.get_post(post_id)
-        post.add_comment(self.user, self.request.get('comment_text'))
+        comment_text = self.request.get('comment_text')
+        if not comment_text:
+            self.render("permalink.html", post=post, logged_in_user=self.user,
+                        comment_error="Cannot post an empty comment")
+            return
+        post.add_comment(self.user, comment_text)
         return self.redirect('%s/post/%s' % (blogurl, str(post.key().id())))
 
 
@@ -172,9 +177,39 @@ class DeleteCommentPage(BlogHandler):
             return self.redirect('/login')
 
         c = models.Comment.get_comment(int(comment_id))
+        if c.author.name != self.user.name:
+            return self.error(403)
+
         post_id = c.post.key().id()
         c.delete()
         return self.redirect('%s/post/%s' % (blogurl, str(post_id)))
+
+
+class EditCommentPage(BlogHandler):
+    def post(self, comment_id):
+        if not self.user:
+            return self.redirect('/login')
+
+        c = models.Comment.get_comment(int(comment_id))
+        if c.author.name != self.user.name:
+            return self.error(403)
+
+        post_id = c.post.key().id()
+        if self.request.get('post_action') == 'update_comment':
+            comment_text = self.request.get('content')
+            if not comment_text:
+                self.render('commentedit.html', comment_text=c.content,
+                            post_subject=c.post.subject,
+                            comment_error="Cannot leave an empty comment. " +
+                            "Perhaps you want to delete the comment instead.")
+                return
+            c.content = self.request.get('content')
+            c.put()
+            return self.redirect('%s/post/%s' % (blogurl, str(post_id)))
+        elif self.request.get('post_action') == 'cancel_update':
+            return self.redirect('%s/post/%s' % (blogurl, str(post_id)))
+        self.render("commentedit.html", comment_text=c.content,
+                    post_subject=c.post.subject)
 
 
 class NewPost(BlogHandler):
@@ -331,6 +366,8 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                 CommentPostPage),
                                (blogurl + '/comment/([0-9]+)/delete',
                                 DeleteCommentPage),
+                               (blogurl + '/comment/([0-9]+)/edit',
+                                EditCommentPage),
                                (blogurl + '/newpost', NewPost),
                                (blogurl + '/user/(.*)', UserPage),
                                ('/signup', Register),

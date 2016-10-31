@@ -14,11 +14,18 @@
   </div>
 
   {% if logged_in_user and logged_in_user.name == c.author.name %}
-  <form method="post" action="/writehere/comment/{{c.key().id()}}/delete">
-    <div class="form-group">
-      <button class="btn btn-danger">Delete Comment</button>
-    </div>
-  </form>
+  <div class="row">
+    <form class="col-md-6" method="post" action="/writehere/comment/{{c.key().id()}}/delete">
+      <div class="form-group">
+	<button class="btn btn-danger">Delete Comment</button>
+      </div>
+    </form>
+    <form class="col-md-6" method="post" action="/writehere/comment/{{c.key().id()}}/edit">
+      <div class="form-group">
+	<button class="btn btn-primary">Edit Comment</button>
+      </div>
+    </form>
+  </div>
   {% endif %}
 </div>
 
