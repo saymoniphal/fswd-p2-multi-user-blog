@@ -12,5 +12,13 @@
   <div class="comment-text">
     {{c._render_text | clean(tags=['img', 'b', 'i', 'em', 'strong', 'br'], attributes={'img': ['src', 'alt', 'title', 'width', 'height']})}}
   </div>
+
+  {% if logged_in_user and logged_in_user.name == c.author.name %}
+  <form method="post" action="/writehere/comment/{{c.key().id()}}/delete">
+    <div class="form-group">
+      <button class="btn btn-danger">Delete Comment</button>
+    </div>
+  </form>
+  {% endif %}
 </div>
 

@@ -133,6 +133,11 @@ class Comment(db.Model):
     created = db.DateTimeProperty(auto_now_add=True)
     content = db.TextProperty(required=True)
 
-    def render(self):
+    @staticmethod
+    def get_comment(comment_id):
+        return Comment.get_by_id(comment_id)
+
+    def render(self, logged_in_user):
         self._render_text = self.content.replace('\n', '<br>')
-        return utils.render_str("comment.html", c=self)
+        return utils.render_str("comment.html", c=self,
+                                logged_in_user=logged_in_user)

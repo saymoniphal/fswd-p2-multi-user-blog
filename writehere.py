@@ -165,6 +165,17 @@ class PostPage(BlogHandler):
         self.render("permalink.html", post=post, logged_in_user=self.user)
 
 
+class DeleteCommentPage(BlogHandler):
+    def post(self, comment_id):
+        if not self.user:
+            return self.redirect('/login')
+
+        c = models.Comment.get_comment(int(comment_id))
+        post_id = c.post.key().id()
+        c.delete()
+        return self.redirect('%s/post/%s' % (blogurl, str(post_id)))
+
+
 class NewPost(BlogHandler):
     def get(self):
         if self.user:
@@ -314,6 +325,7 @@ app = webapp2.WSGIApplication([('/', MainPage),
                                (blogurl + '/post/([0-9]+)/like', LikePostPage),
                                (blogurl + '/post/([0-9]+)/dislike', DislikePostPage),
                                (blogurl + '/post/([0-9]+)/comment', CommentPostPage),
+                               (blogurl + '/comment/([0-9]+)/delete', DeleteCommentPage),
                                (blogurl + '/newpost', NewPost),
                                (blogurl + '/user/(.*)', UserPage),
                                ('/signup', Register),
