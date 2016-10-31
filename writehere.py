@@ -72,6 +72,49 @@ class BlogFront(BlogHandler):
         self.render('front.html', posts=posts)
 
 
+class DeletePostPage(BlogHandler):
+    def post(self, post_id):
+        if not self.user:
+            return self.redirect('/login')
+
+        post = models.Post.get_post(post_id)
+        post.delete()
+        self.redirect(blogurl)
+
+
+class EditPostPage(BlogHandler):
+    def post(self, post_id):
+        if not self.user:
+            return self.redirect('/login')
+
+        if self.request.get('post_action') == 'save_post':
+            # we are coming here with updated content
+            subject = self.request.get('subject')
+            content = self.request.get('content')
+            if not subject or not content:
+                error = "Subject and content, please!"
+                self.render("newpost.html", post_id=post_id, subject=subject,
+                            content=content, error=error)
+                return
+            post = models.Post.get_post(post_id)
+            if post.author.name != self.user.name:
+                self.error(403)
+                return
+            post.subject = subject
+            post.content = content
+            post.put()
+            # redirect to post page displaying an updated post
+            return self.redirect('%s/post/%s' % (blogurl, str(post_id)))
+        elif self.request.get('post_action') == 'cancel_post':
+            # went to edit post, but cancelled the edit
+            return self.redirect('%s/post/%s' % (blogurl, str(post_id)))
+        else:
+            post = models.Post.get_post(post_id)
+            self.render('newpost.html', post_id=post_id, subject=post.subject,
+                        content=post.content)
+            return
+
+
 class PostPage(BlogHandler):
     def get(self, post_id):
         post = models.Post.get_post(post_id)
@@ -84,18 +127,7 @@ class PostPage(BlogHandler):
 
     def post(self, post_id):
         post = models.Post.get_post(post_id)
-        if self.request.get('post_action') == 'delete_post':
-            if post.author.name != self.user.name:
-                self.error(403)
-                return
-            post.delete()
-            self.redirect(blogurl)
-            return
-        elif self.request.get('post_action') == 'edit_post':
-            self.render("newpost.html", post_id=post_id, subject=post.subject,
-                        content=post.content)
-            return
-        elif self.request.get('post_action') == 'like_post':
+        if self.request.get('post_action') == 'like_post':
             if post.author.name == self.user.name:
                 self.error(403)
                 return
@@ -112,28 +144,6 @@ class PostPage(BlogHandler):
         elif self.request.get('post_action') == 'comment_post':
             post.add_comment(self.user, self.request.get('comment_text'))
             self.redirect('%s/post/%s' % (blogurl, str(post.key().id())))
-            return
-        elif self.request.get('post_action') == 'save_post':
-            # we are coming here with updated content
-            subject = self.request.get('subject')
-            content = self.request.get('content')
-            if post.author.name != self.user.name:
-                self.error(403)
-                return
-            if not subject or not content:
-                error = "Subject and content, please!"
-                self.render("newpost.html", post_id=post_id, subject=subject,
-                            content=content, error=error)
-                return
-            post.subject = subject
-            post.content = content
-            post.put()
-            # redirect to post page displaying an updated post
-            self.redirect('%s/post/%s' % (blogurl, str(post_id)))
-            return
-        elif self.request.get('post_action') == 'cancel_post':
-            # went to edit post, but cancelled the edit
-            self.redirect('%s/post/%s' % (blogurl, str(post_id)))
             return
         else:
             self.error(405)
@@ -284,6 +294,8 @@ class Welcome(BlogHandler):
 app = webapp2.WSGIApplication([('/', MainPage),
                                (blogurl + '/?', BlogFront),
                                (blogurl + '/post/([0-9]+)', PostPage),
+                               (blogurl + '/post/([0-9]+)/delete', DeletePostPage),
+                               (blogurl + '/post/([0-9]+)/edit', EditPostPage),
                                (blogurl + '/newpost', NewPost),
                                (blogurl + '/user/(.*)', UserPage),
                                ('/signup', Register),

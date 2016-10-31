@@ -4,9 +4,13 @@
   {{post.render() | safe}}
   <div class="post-controls">
     {% if logged_in_user and post.author.name == logged_in_user.name %}
-    <form method="post" class="form-horizontal">
+    <form method="post" action="/writehere/post/{{post.key().id()}}/delete" class="form-horizontal">
       <div class="form-group">
         <button class="btn btn-danger" name="post_action" value="delete_post">Delete</button>
+      </div>
+    </form>
+    <form method="post" action="/writehere/post/{{post.key().id()}}/edit" class="form-horizontal">
+      <div class="form-group">
         <button class="btn btn-primary" name="post_action" value="edit_post">Edit</button>
       </div>
     </form>
@@ -24,7 +28,7 @@
   
   <div class="comments">
   	{% for c in post.comments.order('created') %}
-    		{{ c.render() | safe}}
+    		{{ c.render(logged_in_user) | safe}}
     		<br><br>
   	{% endfor %}
   </div>
