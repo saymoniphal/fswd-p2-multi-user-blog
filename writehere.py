@@ -111,22 +111,30 @@ class PostPage(BlogHandler):
             post.add_comment(self.user, self.request.get('comment_text'))
             self.redirect('%s/post/%s' % (blogurl, str(post.key().id())))
             return
-        # we are coming here with updated content
-        subject = self.request.get('subject')
-        content = self.request.get('content')
-        if post.author.name != self.user.name:
-            self.error(403)
+        elif self.request.get('post_action') == 'save_post':
+            # we are coming here with updated content
+            subject = self.request.get('subject')
+            content = self.request.get('content')
+            if post.author.name != self.user.name:
+                self.error(403)
+                return
+            if not subject or not content:
+                error = "Subject and content, please!"
+                self.render("newpost.html", post_id=post_id, subject=subject, content=content, error=error)
+                return
+            post.subject = subject
+            post.content = content
+            post.put()
+            # redirect to post page displaying an updated post
+            self.redirect('%s/post/%s' % (blogurl, str(post_id)))
             return
-        if not subject or not content:
-            error = "Subject and content, please!"
-            self.render("newpost.html", post_id=post_id, subject=subject, content=content, error=error)
+        elif self.request.get('post_action') == 'cancel_post':
+            # went to edit post, but cancelled the edit
+            self.redirect('%s/post/%s' % (blogurl, str(post_id)))
             return
-        post.subject = subject
-        post.content = content
-        post.put()
-        # redirect to post page displaying an updated post
-        self.redirect('%s/post/%s' % (blogurl, str(post_id)))
-        return
+        else:
+            self.error(405)
+            return
 
 class NewPost(BlogHandler):
     def get(self):
@@ -139,16 +147,23 @@ class NewPost(BlogHandler):
         if not self.user:
             self.redirect(blogurl)
 
-        subject = self.request.get('subject')
-        content = self.request.get('content')
+        if self.request.get('post_action') == 'save_post':
+            subject = self.request.get('subject')
+            content = self.request.get('content')
 
-        if subject and content:
-            p = models.Post.new_post(subject, content, self.user)
-            self.redirect('%s/post/%s' % (blogurl, str(p.key().id())))
+            if subject and content:
+                p = models.Post.new_post(subject, content, self.user)
+                self.redirect('%s/post/%s' % (blogurl, str(p.key().id())))
+                return
+            else:
+                error = "Subject and content, please!"
+                self.render("newpost.html", subject=subject, content=content, error=error)
+        elif self.request.get('post_action') == 'cancel_post':
+            self.redirect(blogurl)
             return
         else:
-            error = "Subject and content, please!"
-            self.render("newpost.html", subject=subject, content=content, error=error)
+            self.error(405)
+            return
 
 class UserPage(BlogHandler):
     def get(self, username):
