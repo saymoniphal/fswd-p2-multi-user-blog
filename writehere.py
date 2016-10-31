@@ -81,6 +81,12 @@ class DeletePostPage(BlogHandler):
         if post.author.name != self.user.name:
             return self.error(403)
 
+        for comment in post.comments:
+            comment.delete()
+        for like in post.likers:
+            like.delete()
+        for dislike in post.dislikers:
+            dislike.delete()
         post.delete()
         self.redirect(blogurl)
 
