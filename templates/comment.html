@@ -15,12 +15,12 @@
 
   {% if logged_in_user and logged_in_user.name == c.author.name %}
   <div class="row">
-    <form class="col-md-6" method="post" action="/writehere/comment/{{c.key().id()}}/delete">
+    <form class="col-md-1" method="post" action="/writehere/comment/{{c.key().id()}}/delete">
       <div class="form-group">
 	<button class="btn btn-danger">Delete Comment</button>
       </div>
     </form>
-    <form class="col-md-6" method="post" action="/writehere/comment/{{c.key().id()}}/edit">
+    <form class="col-md-1 col-md-offset-1" method="post" action="/writehere/comment/{{c.key().id()}}/edit">
       <div class="form-group">
 	<button class="btn btn-primary">Edit Comment</button>
       </div>

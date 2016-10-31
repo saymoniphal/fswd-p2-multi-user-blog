@@ -4,23 +4,23 @@
   {{post.render() | safe}}
   <div class="post-controls row">
     {% if logged_in_user and post.author.name == logged_in_user.name %}
-    <form method="post" action="/writehere/post/{{post.key().id()}}/delete" class="col-md-6">
+    <form method="post" action="/writehere/post/{{post.key().id()}}/delete" class="col-md-1">
       <div class="form-group">
         <button class="btn btn-danger" name="post_action" value="delete_post">Delete</button>
       </div>
     </form>
-    <form method="post" action="/writehere/post/{{post.key().id()}}/edit" class="col-md-6">
+    <form method="post" action="/writehere/post/{{post.key().id()}}/edit" class="col-md-1 col-md-offset-1">
       <div class="form-group">
         <button class="btn btn-primary" name="post_action" value="edit_post">Edit</button>
       </div>
     </form>
     {% elif logged_in_user %}
-    <form method="post" action="/writehere/post/{{post.key().id()}}/like" class="col-md-6">
+    <form method="post" action="/writehere/post/{{post.key().id()}}/like" class="col-md-1">
       <div class="form-group">
         <button class="btn btn-primary" name="post_action" value="like_post">Like</button>
       </div>
     </form>
-    <form method="post" action="/writehere/post/{{post.key().id()}}/dislike" class="col-md-6">
+    <form method="post" action="/writehere/post/{{post.key().id()}}/dislike" class="col-md-1 col-md-offset-1">
       <div class="form-group">
         <button class="btn btn-primary" name="post_action" value="dislike_post">Dislike</button>
       </div>
