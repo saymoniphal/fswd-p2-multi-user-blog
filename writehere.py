@@ -143,7 +143,7 @@ class DislikePostPage(BlogHandler):
 
         post.add_dislike(self.user)
         return self.redirect('%s/post/%s' % (blogurl, str(post.key().id())))
-            
+
 
 class CommentPostPage(BlogHandler):
     def post(self, post_id):
@@ -153,7 +153,8 @@ class CommentPostPage(BlogHandler):
         post = models.Post.get_post(post_id)
         post.add_comment(self.user, self.request.get('comment_text'))
         return self.redirect('%s/post/%s' % (blogurl, str(post.key().id())))
-        
+
+
 class PostPage(BlogHandler):
     def get(self, post_id):
         post = models.Post.get_post(post_id)
@@ -320,12 +321,16 @@ class Welcome(BlogHandler):
 app = webapp2.WSGIApplication([('/', MainPage),
                                (blogurl + '/?', BlogFront),
                                (blogurl + '/post/([0-9]+)', PostPage),
-                               (blogurl + '/post/([0-9]+)/delete', DeletePostPage),
+                               (blogurl + '/post/([0-9]+)/delete',
+                                DeletePostPage),
                                (blogurl + '/post/([0-9]+)/edit', EditPostPage),
                                (blogurl + '/post/([0-9]+)/like', LikePostPage),
-                               (blogurl + '/post/([0-9]+)/dislike', DislikePostPage),
-                               (blogurl + '/post/([0-9]+)/comment', CommentPostPage),
-                               (blogurl + '/comment/([0-9]+)/delete', DeleteCommentPage),
+                               (blogurl + '/post/([0-9]+)/dislike',
+                                DislikePostPage),
+                               (blogurl + '/post/([0-9]+)/comment',
+                                CommentPostPage),
+                               (blogurl + '/comment/([0-9]+)/delete',
+                                DeleteCommentPage),
                                (blogurl + '/newpost', NewPost),
                                (blogurl + '/user/(.*)', UserPage),
                                ('/signup', Register),
