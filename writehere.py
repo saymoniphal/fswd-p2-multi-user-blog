@@ -78,6 +78,9 @@ class DeletePostPage(BlogHandler):
             return self.redirect('/login')
 
         post = models.Post.get_post(post_id)
+        if not post:
+            return self.error(404)
+
         if post.author.name != self.user.name:
             return self.error(403)
 
@@ -107,6 +110,9 @@ class EditPostPage(BlogHandler):
                 return
 
             post = models.Post.get_post(post_id)
+            if not post:
+                return self.error(404)
+
             if post.author.name != self.user.name:
                 return self.error(403)
 
@@ -120,6 +126,8 @@ class EditPostPage(BlogHandler):
             return self.redirect('%s/post/%s' % (blogurl, str(post_id)))
         else:
             post = models.Post.get_post(post_id)
+            if not post:
+                return self.error(404)
             self.render('newpost.html', post_id=post_id, subject=post.subject,
                         content=post.content)
             return
@@ -131,6 +139,9 @@ class LikePostPage(BlogHandler):
             return self.redirect('/login')
 
         post = models.Post.get_post(post_id)
+        if not post:
+            return self.error(404)
+
         if post.author.name == self.user.name:
             return self.error(403)
 
@@ -144,6 +155,9 @@ class DislikePostPage(BlogHandler):
             return self.redirect('/login')
 
         post = models.Post.get_post(post_id)
+        if not post:
+            return self.error(404)
+
         if post.author.name == self.user.name:
             return self.error(403)
 
@@ -157,6 +171,9 @@ class CommentPostPage(BlogHandler):
             return self.redirect('/login')
 
         post = models.Post.get_post(post_id)
+        if not post:
+            return self.error(404)
+
         comment_text = self.request.get('comment_text')
         if not comment_text:
             self.render("permalink.html", post=post, logged_in_user=self.user,
@@ -183,6 +200,9 @@ class DeleteCommentPage(BlogHandler):
             return self.redirect('/login')
 
         c = models.Comment.get_comment(int(comment_id))
+        if not c:
+            return self.error(404)
+
         if c.author.name != self.user.name:
             return self.error(403)
 
@@ -197,6 +217,9 @@ class EditCommentPage(BlogHandler):
             return self.redirect('/login')
 
         c = models.Comment.get_comment(int(comment_id))
+        if not c:
+            return self.error(404)
+
         if c.author.name != self.user.name:
             return self.error(403)
 
