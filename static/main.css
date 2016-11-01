@@ -7,6 +7,14 @@ header {
     padding: 10px;
 }
 
+footer {
+    font-size: 80%;
+    border-top: 1px solid #666;
+    color: gray;
+    text-align: right;
+    font-family: monospace;
+}
+
 .login-link {
     color: gray;
     text-decoration: none;
